@@ -1,0 +1,21 @@
+server:
+  port: 9090
+
+spring:
+  application:
+    name: client
+
+dubbo:
+  #注册中心
+  registry:
+    address: zookeeper://192.168.3.210:2181/ask
+    #group: ask
+      #关闭注册中心启动时检查
+    check: false
+  consumer:
+    timeout: 60000
+    retries: 0
+    #关闭所有服务的启动时检查
+    check: false
+redis.redisSize: 10000
+

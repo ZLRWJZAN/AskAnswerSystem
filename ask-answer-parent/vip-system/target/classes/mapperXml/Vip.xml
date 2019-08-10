@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ps.mapper.VipMapper">
+
+    <!--注册-->
+    <insert id="register" parameterType="com.ps.domain.VipDo" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO qa_member_t ( account, nickname, password, integral )
+        VALUES
+            (${account}, #{askNickname}, ${password}, 1000);
+    </insert>
+
+    <!--注册成功后,在流水表增加积分记录-->
+    <insert id="addRegisterIntegral" parameterType="com.ps.domain.VipDo">
+        INSERT INTO qa_integral_t ( user_id, score, type, c_time )
+        VALUES
+            (${id}, 1000, 0, now());
+    </insert>
+
+    <!--查询积分流水-->
+    <select id="queryIntegralWater" parameterType="com.ps.domain.IntegralDo" resultType="com.ps.domain.IntegralDo">
+        SELECT
+            id,
+            user_id as userId,
+            score,
+            type,
+            c_time as cTime
+        FROM
+            qa_integral_t
+        WHERE
+            id =${id}
+    </select>
+
+    <!--回答问卷增加积分-->
+    <update id="addIntegral">
+        UPDATE qa_member_t
+        SET integral = integral +#{integrals}
+        WHERE
+            id = #{memberId}
+    </update>
+
+    <!--增加流水记录-->
+    <insert id="addFlowRecord">
+        INSERT INTO qa_integral_t ( user_id, score, type, c_time )
+        VALUES
+            (#{memberId}, #{integrals}, 5, now());
+    </insert>
+
+    <!--将邀请链接加入数据库-->
+    <update id="addInviteLink">
+        UPDATE qa_member_t
+        SET invite_link = #{inviteLink}
+        WHERE
+            id = #{id}
+    </update>
+
+    <!--给邀请人加分-->
+    <update id="addInvitePoints" parameterType="com.ps.domain.VipDo">
+        UPDATE qa_member_t
+        SET integral = integral+200
+        WHERE
+            id = #{inviterId}
+    </update>
+
+    <!--生成邀请流水记录-->
+    <insert id="createInvitedRecordWater" parameterType="com.ps.domain.VipDo">
+        INSERT INTO qa_integral_t ( user_id, score, type, c_time )
+        VALUES
+            (#{inviterId}, 200, 6, now());
+    </insert>
+
+    <!--注册活动送积分-->
+    <update id="registerActivity">
+        UPDATE qa_member_t
+        SET integral = integral+100
+        WHERE
+            id =${value}
+    </update>
+
+    <!--注册活动增加流水记录-->
+    <insert id="registerActivityWater" parameterType="com.ps.domain.VipDo">
+        INSERT INTO qa_integral_t ( user_id, score, type, c_time )
+        VALUES
+            (#{value}, 100, 8, now());
+    </insert>
+    <!--查询积分排行榜前十-->
+    <select id="queryTopTen" resultType="com.ps.domain.VipDo">
+        SELECT
+            id,
+            nickname,
+            integral
+        FROM
+            qa_member_t
+        ORDER BY
+            integral DESC
+            LIMIT 10
+    </select>
+
+    <!--查询用户信息-->
+    <select id="queryUser" resultType="com.ps.domain.VipDo">
+        SELECT
+            id,
+            account,
+            nickname,
+            integral
+        FROM
+            qa_member_t
+        WHERE
+            id =#{id}
+    </select>
+    <!--扣积分-->
+    <update id="subtractIntegral">
+        UPDATE qa_member_t
+        SET integral = integral-#{needIntegral}
+        WHERE
+            id =#{id}
+    </update>
+
+    <!--增加秒杀积分流水-->
+    <insert id="addIntegralWater" parameterType="com.ps.domain.IntegralDo" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO qa_integral_t ( user_id, score, type, c_time )
+        VALUES
+            (#{id}, #{score}, 4, now());
+    </insert>
+
+    <!--查出用户扣除的积分-->
+    <select id="queryUserIntegral" resultType="com.ps.domain.IntegralDo">
+        SELECT
+            score,
+            user_id as userId
+        FROM
+            qa_integral_t
+        WHERE
+            id = #{value}
+    </select>
+
+    <!--退还用户积分-->
+    <update id="retreatIntegral">
+        UPDATE qa_member_t
+        SET integral = integral+#{score}
+        WHERE
+            id =#{userId}
+    </update>
+
+    <!--增加退还记录-->
+    <insert id="addReturnWater">
+        INSERT INTO qa_integral_t ( user_id, score, type, c_time )
+        VALUES
+            (#{userId}, #{score}, 9, now());
+    </insert>
+
+
+</mapper>

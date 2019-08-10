@@ -1,0 +1,45 @@
+server:
+  port: 9093
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/ask_answer_2
+    username: root
+    password: ps123456
+    type: com.alibaba.druid.pool.DruidDataSource
+  application:
+    name: market
+  kafka:
+    consumer:
+      group-id: register
+    bootstrap-servers: localhost:9092
+  redis:
+    host: 192.168.3.210
+    port: 6379
+
+
+dubbo:
+  protocol:
+    name: dubbo
+    port: -1
+  scan:
+    base-packages: com.ps.serviceImpl
+  #注册中心
+  registry:
+    address: zookeeper://192.168.3.210:2181
+    #group: ask
+    #关闭注册中心启动时检查
+    check: false
+  consumer:
+    #关闭所有服务的启动时检查
+    check: false
+
+mybatis:
+  mapper-locations: /mapperXml/*.xml
+
+#日志
+logging:
+  level.com.ps: info
+  path: D:\log
+debug: true
+

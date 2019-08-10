@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ps.mapper.MarketMapper">
+
+    <!--创建问卷-->
+    <insert id="createQuestionnaire" parameterType="com.ps.domain.ProblemDo">
+        INSERT INTO qa_problem_t ( questionnaire_id,number, problem)
+        VALUES
+            (#{questionnaireId},#{number},#{problem});
+    </insert>
+
+    <!--创建标题-->
+    <insert id="createTitle" parameterType="com.ps.domain.QuestionnaireDo">
+        INSERT INTO qa_questionnaire_t (title,integral)
+        VALUES
+            (#{title},#{integral});
+    </insert>
+
+    <!--提交答案-->
+    <insert id="provideQuestionnaire" parameterType="com.ps.domain.FindingsDo">
+        INSERT INTO qa_findings_t ( questionnaire_id,member_id,problem_id,options)
+        VALUES
+            (#{questionnaireId},#{memberId},#{problemId},#{options});
+    </insert>
+
+    <!--查询出回答该套问卷的悬赏积分-->
+    <select id="queryIntegral" resultType="int">
+        SELECT
+            integral
+        FROM
+            qa_questionnaire_t
+        WHERE
+            id =#{questionnaireId}
+    </select>
+
+    <!--查询出问卷标题-->
+    <select id="queryTitle" resultType="com.ps.domain.QuestionnaireDo">
+        SELECT
+            id,
+            title,
+            integral
+        FROM
+            qa_questionnaire_t
+    </select>
+
+    <!--根据问卷标题id查询出问卷内容-->
+    <select id="queryContent" parameterType="com.ps.domain.QuestionnaireDo" resultType="com.ps.domain.ProblemDo">
+        SELECT
+            id,
+            number,
+            problem,
+            questionnaire_id as questionnaireId
+        FROM
+            qa_problem_t
+        WHERE
+            questionnaire_id =#{id}
+    </select>
+
+    <!--查询商品信息-->
+    <select id="queryCommodity" resultType="com.ps.domain.CommodityDo">
+        SELECT
+            id,
+            name,
+            number,
+            needIntegral,
+            money,
+            describes,
+            begin_time as beginTime,
+            end_time as endTime,
+            version
+        FROM
+            qa_commodity_t
+        WHERE
+            id = #{commodityId}
+    </select>
+
+    <!--查询是否兑换过-->
+    <select id="whetherExchange" resultType="com.ps.domain.OrderFormDo">
+        SELECT
+            id
+        FROM
+            qa_order_form_t
+        WHERE
+            commodity_id = #{commodityId}
+            AND member_id =#{id}
+    </select>
+    <!--减库存-->
+    <update id="subtractInventory">
+        UPDATE qa_commodity_t
+        SET number = number-1,
+        version = version+1
+        WHERE
+            id =#{commodityId}
+            AND number > 0
+    </update>
+
+    <!--创建订单-->
+    <insert id="addOrderForm">
+        INSERT INTO qa_order_form_t ( commodity_id,member_id,time)
+        VALUES
+            (#{commodityId},#{id},now());
+    </insert>
+
+</mapper>

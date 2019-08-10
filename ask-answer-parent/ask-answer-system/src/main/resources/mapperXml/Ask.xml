@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ps.mapper.AskMapper">
+    <!--查询问题以及明细-->
+    <resultMap id="issueAndDetail" type="com.ps.domain.QuestionDo">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="cTime" column="cTime"/>
+        <result property="eTime" column="eTime"/>
+        <result property="reward" column="reward"/>
+        <result property="vipDo.askNickname" column="askNickname"/>
+        <result property="vipDo.answerNickname" column="answerNickname"/>
+        <result property="answerDo.content" column="contents"/>
+        <result property="answerDo.replyTime" column="replyTime"/>
+
+    </resultMap>
+
+    <!--查询问题以及明细-->
+    <select id="queryIssueAndDetail" resultMap="issueAndDetail">
+        SELECT
+            q.id as id,
+            ( SELECT nickname FROM qa_member_t WHERE id = q.promulgator_id ) as askNickname,
+            q.title as title,
+            q.content as content,
+            q.c_time as cTime,
+            q.e_time as eTime,
+            q.reward as reward,
+            ( SELECT nickname FROM qa_member_t WHERE id = a.replier_id ) as answerNickname,
+            a.content as contents,
+            a.reply_time as replyTime
+        FROM
+            qa_question_t q
+            LEFT JOIN qa_answer_t a ON ( q.id = a.question_id )
+    </select>
+
+    <!--发布问题-->
+    <insert id="postQuestions" parameterType="com.ps.domain.QuestionDo">
+        INSERT INTO qa_question_t ( promulgator_id, title, content, c_time,flag,reward)
+        VALUES
+            (${promulgatorId}, "${title}", "${content}", now(),1,20);
+    </insert>
+
+    <!--回答问题-->
+    <insert id="answerIssue" parameterType="com.ps.domain.QuestionDo">
+        INSERT INTO qa_answer_t ( question_id, replier_id, content, reply_time,accept)
+        VALUES
+            (${questionId}, ${replierId}, ${content}, now(),0);
+    </insert>
+
+    <!--采纳问题-->
+    <update id="adoptProblem" parameterType="com.ps.domain.AnswerDo">
+        UPDATE qa_answer_t
+        SET accept = 1
+        WHERE
+            id =${id}
+    </update>
+
+    <!--采纳之后修改问题表中的状态为  解决-->
+    <update id="updateFlag" parameterType="com.ps.domain.AnswerDo">
+        UPDATE qa_question_t
+        SET flag = 2,
+        e_time=now()
+        WHERE
+            id =${questionId}
+    </update>
+
+    <!--根据问题id查询出提问者id与悬赏积分-->
+    <select id="queryAskIdAndReward" parameterType="com.ps.domain.AnswerDo" resultType="com.ps.domain.QuestionDo">
+        SELECT
+            promulgator_id as promulgatorId,
+            reward
+        FROM
+            qa_question_t
+        WHERE
+            id =${questionId}
+    </select>
+
+    <!--给回答者加积分-->
+    <update id="addReward">
+        UPDATE qa_member_t
+        SET integral = integral+${reward}
+        WHERE
+            id =${replierId}
+    </update>
+
+    <!--给提问者减积分-->
+    <update id="subtractReward" parameterType="com.ps.domain.QuestionDo">
+        UPDATE qa_member_t
+        SET integral = integral-${reward}
+        WHERE
+            id =${promulgatorId}
+    </update>
+
+    <!--增加发布问题的积分流水记录-->
+    <insert id="addIssueRecord" parameterType="com.ps.domain.QuestionDo">
+        INSERT INTO qa_integral_t ( user_id, score, type, c_time )
+        VALUES
+            (${promulgatorId}, ${reward}, 2, now());
+    </insert>
+
+    <!--增加回答问题的积分流水记录-->
+    <insert id="addAnswerRecord">
+        INSERT INTO qa_integral_t ( user_id, score, type, c_time )
+        VALUES
+            (${replierId}, ${reward}, 3, now());
+    </insert>
+
+    <!--采纳活动-->
+    <update id="acceptActivity">
+        UPDATE qa_member_t
+        SET integral = integral+10
+        WHERE
+            id =${value}
+    </update>
+
+    <!--增加回答问题的积分流水记录-->
+    <insert id="acceptActivityWater">
+        INSERT INTO qa_integral_t ( user_id, score, type, c_time )
+        VALUES
+            (${value}, 10, 7, now());
+    </insert>
+
+</mapper>

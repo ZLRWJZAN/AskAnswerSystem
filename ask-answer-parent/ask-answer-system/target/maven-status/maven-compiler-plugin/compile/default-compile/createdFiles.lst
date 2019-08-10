@@ -1,0 +1,5 @@
+com\ps\Test.class
+com\ps\Ask.class
+com\ps\serviceImpl\SolrServiceImpl.class
+com\ps\serviceImpl\AskImpl.class
+com\ps\mapper\AskMapper.class
